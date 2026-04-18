@@ -7,11 +7,15 @@ cd "$SCRIPT_DIR"
 
 TASKS=("$@")
 if [ "${#TASKS[@]}" -eq 0 ]; then
-  TASKS=("OfflineCarButton1Gymnasium-v0")
+  TASKS=(
+    "OfflineMetadrive-easymean-v0"
+    "OfflineMetadrive-mediumsparse-v0"
+    "OfflineAntRun-v0"
+  )
 fi
 
 SEEDS=(${SEEDS:-0 1 2})
-ALGORITHMS=(${ALGORITHMS:-cpq coptidice})
+ALGORITHMS=(${ALGORITHMS:-cpq coptidice bc-safe})
 CUDA_DEVICES="${CUDA_DEVICES:-0,1}"
 IFS=',' read -r -a GPUS <<< "$CUDA_DEVICES"
 
@@ -20,6 +24,7 @@ LOGDIR="${LOGDIR:-$SCRIPT_DIR/logs}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
 THREADS="${THREADS:-4}"
 EVAL_EPISODES="${EVAL_EPISODES:-10}"
+UPDATE_STEPS="${UPDATE_STEPS:-1000000}"
 
 if [ "${#GPUS[@]}" -eq 0 ] || [ -z "${GPUS[0]}" ]; then
   echo "No GPUs selected. Set CUDA_DEVICES to a comma-separated list such as 0,1." >&2
@@ -39,6 +44,7 @@ echo "[preflight] seeds=${SEEDS[*]}"
 echo "[preflight] algorithms=${ALGORITHMS[*]}"
 echo "[preflight] gpus=${GPUS[*]}"
 echo "[preflight] logdir=$LOGDIR"
+echo "[preflight] update_steps=$UPDATE_STEPS"
 if [ -n "${WANDB_MODE:-}" ]; then
   export WANDB_MODE
   echo "[preflight] wandb_mode=$WANDB_MODE"
@@ -98,6 +104,7 @@ run_single() {
   local task="$3"
   local seed="$4"
   local module_path=""
+  local -a extra_args=()
   local safe_task="${task//[^A-Za-z0-9._-]/_}"
   local stdout_dir="$LOGDIR/stdout/$safe_task"
   local stdout_file="$stdout_dir/${algo}-seed${seed}.log"
@@ -108,6 +115,10 @@ run_single() {
       ;;
     coptidice)
       module_path="examples.train.train_coptidice"
+      ;;
+    bc-safe)
+      module_path="examples.train.train_bc"
+      extra_args+=(--bc_mode safe)
       ;;
     *)
       echo "Unsupported algorithm: $algo" >&2
@@ -127,10 +138,12 @@ run_single() {
     --threads "$THREADS" \
     --num_workers "$NUM_WORKERS" \
     --eval_episodes "$EVAL_EPISODES" \
+    --update_steps "$UPDATE_STEPS" \
     --project "$PROJECT" \
     --group "$task" \
     --name "${algo}-seed${seed}" \
     --logdir "$LOGDIR" \
+    "${extra_args[@]}" \
     2>&1 | tee "$stdout_file"
 
   echo "[done] gpu=$gpu algo=$algo task=$task seed=$seed"

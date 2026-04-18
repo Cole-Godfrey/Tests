@@ -2,10 +2,13 @@
 
 This repo now includes a Linux/CUDA conda environment file and a `run.sh` launcher that defaults to:
 
-- `OfflineCarButton1Gymnasium-v0`
-- algorithms: `CPQ` and `COptiDICE`
+- `OfflineMetadrive-easymean-v0`
+- `OfflineMetadrive-mediumsparse-v0`
+- `OfflineAntRun-v0`
+- algorithms: `CPQ`, `COptiDICE`, and `BC-Safe`
 - seeds: `0 1 2`
-- one training process per GPU across `CUDA_DEVICES=0,1`
+- `1,000,000` update steps per run
+- one training job at a time in the foreground
 
 ## 1. Create the conda environment
 
@@ -71,7 +74,7 @@ If you ever want to disable online syncing for a specific run, set:
 export WANDB_MODE=offline
 ```
 
-## 3. Launch the default 6 runs
+## 3. Launch the default 27 runs
 
 ```bash
 chmod +x run.sh
@@ -80,8 +83,10 @@ chmod +x run.sh
 
 That launches:
 
-- `train_cpq.py` on `OfflineCarButton1Gymnasium-v0` for seeds `0,1,2`
-- `train_coptidice.py` on `OfflineCarButton1Gymnasium-v0` for seeds `0,1,2`
+- `CPQ`, `COptiDICE`, and `BC-Safe`
+- on `OfflineMetadrive-easymean-v0`, `OfflineMetadrive-mediumsparse-v0`, and `OfflineAntRun-v0`
+- for seeds `0,1,2`
+- with `1,000,000` update steps per run
 
 The script first verifies CUDA, then downloads the DSRL dataset once, then runs one training job at a time in the foreground. Output is streamed to the terminal and written to the matching log file with `tee`. If a run fails, the script stops immediately on that run.
 
@@ -99,10 +104,16 @@ Reduce CPU pressure on a busy shared machine:
 THREADS=2 NUM_WORKERS=2 ./run.sh
 ```
 
-Run additional Safety Gymnasium tasks:
+Override the default update budget:
 
 ```bash
-./run.sh OfflineCarButton1Gymnasium-v0 OfflineCarGoal1Gymnasium-v0 OfflinePointButton1Gymnasium-v0
+UPDATE_STEPS=200000 ./run.sh
+```
+
+Run a custom task list:
+
+```bash
+./run.sh OfflineMetadrive-easymean-v0 OfflineAntRun-v0
 ```
 
 Run detached:
