@@ -31,12 +31,14 @@ def eval(args: EvalConfig):
         torch.set_num_threads(args.threads)
 
     if "Metadrive" in cfg["task"]:
-        import gym
+        import gym as legacy_gym
+        raw_env = legacy_gym.make(cfg["task"])
     else:
         import gymnasium as gym  # noqa
+        raw_env = gym.make(cfg["task"])
 
     env = wrap_env(
-        env=gym.make(cfg["task"]),
+        env=raw_env,
         reward_scale=cfg["reward_scale"],
     )
     env = OfflineEnvWrapper(env)

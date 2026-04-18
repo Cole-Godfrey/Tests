@@ -51,8 +51,10 @@ def train(args: BCTrainConfig):
 
     # the cost scale is down in trainer rollout
     if "Metadrive" in args.task:
-        import gym
-    env = gym.make(args.task)
+        import gym as legacy_gym
+        env = legacy_gym.make(args.task)
+    else:
+        env = gym.make(args.task)
     data = env.get_dataset()
     env.set_target_cost(args.cost_limit)
 

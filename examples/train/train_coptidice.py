@@ -51,8 +51,10 @@ def train(args: COptiDICETrainConfig):
 
     # initialize environment
     if "Metadrive" in args.task:
-        import gym
-    env = gym.make(args.task)
+        import gym as legacy_gym
+        env = legacy_gym.make(args.task)
+    else:
+        env = gym.make(args.task)
 
     # pre-process offline dataset
     data = env.get_dataset()

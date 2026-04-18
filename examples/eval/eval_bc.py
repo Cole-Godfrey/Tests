@@ -31,11 +31,11 @@ def eval(args: EvalConfig):
         torch.set_num_threads(args.threads)
 
     if "Metadrive" in cfg["task"]:
-        import gym
+        import gym as legacy_gym
+        env = legacy_gym.make(cfg["task"])
     else:
         import gymnasium as gym  # noqa
-
-    env = gym.make(cfg["task"])
+        env = gym.make(cfg["task"])
     env.set_target_cost(cfg["cost_limit"])
 
     # model & optimizer & scheduler setup
