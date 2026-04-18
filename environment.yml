@@ -1,0 +1,26 @@
+name: osrl
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pytorch=1.13.1
+  - pytorch-cuda=11.7
+  - numpy=1.24.4
+  - scipy=1.10.1
+  - numba=0.57.1
+  - pyyaml=6.0.2
+  - tqdm
+  - tensorboard
+  - h5py
+  - protobuf=3.19.6
+  - python-dateutil=2.8.2
+  - swig=4.1.1
+  - pip:
+      - dsrl==0.1.0
+      - fast-safe-rl==0.1.0
+      - pyrallis==0.3.1
+      - wandb==0.14.2
+      - easy_runner
