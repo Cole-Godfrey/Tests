@@ -37,6 +37,7 @@ Validate the install before training:
 
 ```bash
 python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.device_count())"
+python -c "import matplotlib, wandb, pkg_resources; print('python deps ok')"
 ```
 
 If training fails immediately with `ModuleNotFoundError: No module named 'pkg_resources'`, you likely have `setuptools>=82`, which removed `pkg_resources`. Downgrade it and rerun:

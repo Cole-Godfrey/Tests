@@ -74,6 +74,22 @@ except ModuleNotFoundError as exc:
     ) from exc
 PY
 
+python - <<'PY'
+missing = []
+for module_name in ("matplotlib", "wandb"):
+    try:
+        __import__(module_name)
+    except ModuleNotFoundError:
+        missing.append(module_name)
+
+if missing:
+    raise SystemExit(
+        "Missing Python packages: "
+        + ", ".join(missing)
+        + ". Install them with `pip install -r requirements-server.txt`, then rerun ./run.sh."
+    )
+PY
+
 python scripts/prefetch_dsrl_datasets.py "${TASKS[@]}"
 
 run_single() {
