@@ -20,6 +20,8 @@ pip install -e . --no-deps
 
 This setup intentionally installs PyTorch from the official CUDA 11.7 pip wheels rather than conda. That avoids the `libtorch_cpu.so: undefined symbol: iJIT_NotifyEvent` MKL issue you hit with conda-based PyTorch.
 
+`swig` is not included in the conda env because it is not required for the current pip-based install path. If a future package install explicitly asks for it on your server image, install it separately with your system package manager or a one-off `conda install -c conda-forge swig`.
+
 If your existing env is broken, rebuild it cleanly:
 
 ```bash
