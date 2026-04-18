@@ -17,6 +17,15 @@ conda activate osrl
 pip install -e . --no-deps
 ```
 
+If your existing env already fails on `import torch` with
+`libtorch_cpu.so: undefined symbol: iJIT_NotifyEvent`, repair it in place with:
+
+```bash
+conda activate osrl
+conda install -y "mkl=2024.0" intel-openmp
+pip install -e . --no-deps
+```
+
 If you update `environment.yml` later, refresh with:
 
 ```bash

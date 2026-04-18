@@ -2,12 +2,15 @@ name: osrl
 channels:
   - pytorch
   - nvidia
+  - defaults
   - conda-forge
 dependencies:
   - python=3.10
   - pip
   - pytorch=1.13.1
   - pytorch-cuda=11.7
+  - mkl=2024.0
+  - intel-openmp
   - numpy=1.24.4
   - scipy=1.10.1
   - numba=0.57.1
