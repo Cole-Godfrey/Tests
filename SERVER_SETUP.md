@@ -25,6 +25,8 @@ This setup intentionally installs PyTorch from the official CUDA 11.7 pip wheels
 
 `swig` is not included in the conda env because it is not required for the current pip-based install path. If a future package install explicitly asks for it on your server image, install it separately with your system package manager or a one-off `conda install -c conda-forge swig`.
 
+`requirements-server.txt` also installs the MetaDrive simulator from the upstream git repo, which is required for `OfflineMetadrive-*` tasks such as `easymean` and `mediumsparse`.
+
 If your existing env is broken, rebuild it cleanly:
 
 ```bash

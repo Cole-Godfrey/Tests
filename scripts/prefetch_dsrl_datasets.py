@@ -5,10 +5,21 @@ import argparse
 import bullet_safety_gym  # noqa: F401
 import dsrl  # noqa: F401
 import gymnasium as gym
+from gymnasium.error import NameNotFound
 
 
 def prefetch(task: str) -> None:
-    env = gym.make(task)
+    try:
+        env = gym.make(task)
+    except NameNotFound as exc:
+        if "OfflineMetadrive" in task:
+            raise SystemExit(
+                f"{task} is not registered. MetaDrive support is missing in this environment. "
+                "Install it with `pip install -r requirements-server.txt` or "
+                "`pip install git+https://github.com/HenryLHH/metadrive_clean.git@main`, "
+                "then rerun ./run.sh."
+            ) from exc
+        raise
     dataset = env.get_dataset()
     dataset_path = getattr(getattr(env, "unwrapped", env), "dataset_filepath", None)
     print(f"[prefetch] task={task} observations={dataset['observations'].shape}")
