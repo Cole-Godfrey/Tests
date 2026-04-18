@@ -29,6 +29,7 @@ fi
 export PYTHONUNBUFFERED=1
 export OMP_NUM_THREADS="$THREADS"
 export MKL_NUM_THREADS="$THREADS"
+export PYTHONPATH="$SCRIPT_DIR${PYTHONPATH:+:$PYTHONPATH}"
 
 mkdir -p "$LOGDIR/stdout"
 
@@ -80,17 +81,17 @@ run_single() {
   local algo="$2"
   local task="$3"
   local seed="$4"
-  local script_path=""
+  local module_path=""
   local safe_task="${task//[^A-Za-z0-9._-]/_}"
   local stdout_dir="$LOGDIR/stdout/$safe_task"
   local stdout_file="$stdout_dir/${algo}-seed${seed}.log"
 
   case "$algo" in
     cpq)
-      script_path="examples/train/train_cpq.py"
+      module_path="examples.train.train_cpq"
       ;;
     coptidice)
-      script_path="examples/train/train_coptidice.py"
+      module_path="examples.train.train_coptidice"
       ;;
     *)
       echo "Unsupported algorithm: $algo" >&2
@@ -103,7 +104,7 @@ run_single() {
   echo "[launch] stdout=$stdout_file"
   echo "[launch] streaming=terminal+log"
 
-  CUDA_VISIBLE_DEVICES="$gpu" python "$script_path" \
+  CUDA_VISIBLE_DEVICES="$gpu" python -m "$module_path" \
     --task "$task" \
     --device cuda:0 \
     --seed "$seed" \
