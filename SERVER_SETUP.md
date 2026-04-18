@@ -12,37 +12,38 @@ This repo now includes a Linux/CUDA conda environment file and a `run.sh` launch
 From the repo root on the Linux server:
 
 ```bash
-conda config --set channel_priority strict
 conda env create -f environment.yml
 conda activate osrl
+pip install -r requirements-server.txt
 pip install -e . --no-deps
 ```
 
-If your existing env already fails on `import torch` with
-`libtorch_cpu.so: undefined symbol: iJIT_NotifyEvent`, repair it in place with:
+This setup intentionally installs PyTorch from the official CUDA 11.7 pip wheels rather than conda. That avoids the `libtorch_cpu.so: undefined symbol: iJIT_NotifyEvent` MKL issue you hit with conda-based PyTorch.
 
-```bash
-conda activate osrl
-conda install -y -c pytorch -c nvidia -c defaults "mkl=2023.1.0" intel-openmp
-pip install -e . --no-deps
-```
-
-If that still fails, the env was likely created with a mixed `conda-forge`/`defaults` BLAS stack. In that case, recreate it cleanly instead of trying to downgrade in place:
+If your existing env is broken, rebuild it cleanly:
 
 ```bash
 conda deactivate
 conda env remove -n osrl -y
-conda config --set channel_priority strict
 conda env create -f environment.yml
 conda activate osrl
+pip install -r requirements-server.txt
 pip install -e . --no-deps
 ```
 
-If you update `environment.yml` later, refresh with:
+Validate the install before training:
 
 ```bash
-conda env update -f environment.yml --prune
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.device_count())"
+```
+
+If you update the environment later, refresh with:
+
+```bash
+conda env remove -n osrl -y
+conda env create -f environment.yml
 conda activate osrl
+pip install -r requirements-server.txt
 pip install -e . --no-deps
 ```
 

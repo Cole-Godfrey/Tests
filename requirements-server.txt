@@ -1,0 +1,16 @@
+--extra-index-url https://download.pytorch.org/whl/cu117
+torch==1.13.1+cu117
+numpy==1.24.4
+scipy==1.10.1
+numba==0.57.1
+pyyaml==6.0.2
+tqdm
+tensorboard>=2.5.0
+h5py>=2.10.0
+protobuf==3.19.6
+python-dateutil==2.8.2
+pyrallis==0.3.1
+wandb==0.14.2
+easy_runner
+dsrl==0.1.0
+fast-safe-rl==0.1.0
