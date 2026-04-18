@@ -39,10 +39,10 @@ Validate the install before training:
 python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.device_count())"
 ```
 
-If training fails immediately with `ModuleNotFoundError: No module named 'pkg_resources'`, install `setuptools` into the env and rerun:
+If training fails immediately with `ModuleNotFoundError: No module named 'pkg_resources'`, you likely have `setuptools>=82`, which removed `pkg_resources`. Downgrade it and rerun:
 
 ```bash
-pip install setuptools
+pip install --force-reinstall "setuptools<82"
 ```
 
 If you update the environment later, refresh with:

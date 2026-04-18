@@ -63,6 +63,16 @@ for idx in range(torch.cuda.device_count()):
     print(f"[preflight] gpu{idx}={torch.cuda.get_device_name(idx)}")
 PY
 
+python - <<'PY'
+try:
+    import pkg_resources  # noqa: F401
+except ModuleNotFoundError as exc:
+    raise SystemExit(
+        "pkg_resources is missing. Downgrade setuptools in this env, e.g. "
+        "`pip install --force-reinstall \"setuptools<82\"`, then rerun ./run.sh."
+    ) from exc
+PY
+
 python scripts/prefetch_dsrl_datasets.py "${TASKS[@]}"
 
 job_dir="$(mktemp -d)"
