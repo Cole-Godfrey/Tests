@@ -10,7 +10,12 @@ from gymnasium.error import NameNotFound
 
 def prefetch(task: str) -> None:
     try:
-        env = gym.make(task)
+        if "OfflineMetadrive" in task:
+            import gym as legacy_gym
+            import dsrl.offline_metadrive  # noqa: F401
+            env = legacy_gym.make(task)
+        else:
+            env = gym.make(task)
     except NameNotFound as exc:
         if "OfflineMetadrive" in task:
             raise SystemExit(
