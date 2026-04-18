@@ -75,20 +75,6 @@ PY
 
 python scripts/prefetch_dsrl_datasets.py "${TASKS[@]}"
 
-job_dir="$(mktemp -d)"
-trap 'rm -rf "$job_dir"' EXIT
-
-job_index=0
-for task in "${TASKS[@]}"; do
-  for seed in "${SEEDS[@]}"; do
-    for algo in "${ALGORITHMS[@]}"; do
-      worker_idx=$((job_index % ${#GPUS[@]}))
-      printf '%s|%s|%s\n' "$algo" "$task" "$seed" >> "$job_dir/worker_${worker_idx}.jobs"
-      job_index=$((job_index + 1))
-    done
-  done
-done
-
 run_single() {
   local gpu="$1"
   local algo="$2"
@@ -115,6 +101,7 @@ run_single() {
   mkdir -p "$stdout_dir"
   echo "[launch] gpu=$gpu algo=$algo task=$task seed=$seed"
   echo "[launch] stdout=$stdout_file"
+  echo "[launch] streaming=terminal+log"
 
   CUDA_VISIBLE_DEVICES="$gpu" python "$script_path" \
     --task "$task" \
@@ -127,33 +114,20 @@ run_single() {
     --group "$task" \
     --name "${algo}-seed${seed}" \
     --logdir "$LOGDIR" \
-    >"$stdout_file" 2>&1
+    2>&1 | tee "$stdout_file"
 
   echo "[done] gpu=$gpu algo=$algo task=$task seed=$seed"
 }
 
-worker_pids=()
-for idx in "${!GPUS[@]}"; do
-  job_file="$job_dir/worker_${idx}.jobs"
-  if [ ! -s "$job_file" ]; then
-    continue
-  fi
-
-  gpu="${GPUS[$idx]}"
-  (
-    while IFS='|' read -r algo task seed; do
-      [ -n "$algo" ] || continue
+job_index=0
+for task in "${TASKS[@]}"; do
+  for seed in "${SEEDS[@]}"; do
+    for algo in "${ALGORITHMS[@]}"; do
+      gpu="${GPUS[$((job_index % ${#GPUS[@]}))]}"
       run_single "$gpu" "$algo" "$task" "$seed"
-    done < "$job_file"
-  ) &
-  worker_pids+=("$!")
+      job_index=$((job_index + 1))
+    done
+  done
 done
 
-status=0
-for pid in "${worker_pids[@]}"; do
-  if ! wait "$pid"; then
-    status=1
-  fi
-done
-
-exit "$status"
+echo "[done] all requested runs completed"

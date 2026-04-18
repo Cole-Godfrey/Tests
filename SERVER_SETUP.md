@@ -82,7 +82,7 @@ That launches:
 - `train_cpq.py` on `OfflineCarButton1Gymnasium-v0` for seeds `0,1,2`
 - `train_coptidice.py` on `OfflineCarButton1Gymnasium-v0` for seeds `0,1,2`
 
-The script first verifies CUDA, then downloads the DSRL dataset once, then schedules one job per GPU.
+The script first verifies CUDA, then downloads the DSRL dataset once, then runs one training job at a time in the foreground. Output is streamed to the terminal and written to the matching log file with `tee`. If a run fails, the script stops immediately on that run.
 
 ## 4. Useful overrides
 
