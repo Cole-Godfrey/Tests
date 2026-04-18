@@ -15,8 +15,7 @@ def prefetch(task: str) -> None:
         if "OfflineMetadrive" in task:
             raise SystemExit(
                 f"{task} is not registered. MetaDrive support is missing in this environment. "
-                "Install it with `pip install -r requirements-server.txt` or "
-                "`pip install git+https://github.com/HenryLHH/metadrive_clean.git@main`, "
+                "Install it with `./scripts/install_metadrive_compat.sh`, "
                 "then rerun ./run.sh."
             ) from exc
         raise

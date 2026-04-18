@@ -18,6 +18,7 @@ From the repo root on the Linux server:
 conda env create -f environment.yml
 conda activate osrl
 pip install -r requirements-server.txt
+./scripts/install_metadrive_compat.sh
 pip install -e . --no-deps
 ```
 
@@ -25,7 +26,7 @@ This setup intentionally installs PyTorch from the official CUDA 11.7 pip wheels
 
 `swig` is not included in the conda env because it is not required for the current pip-based install path. If a future package install explicitly asks for it on your server image, install it separately with your system package manager or a one-off `conda install -c conda-forge swig`.
 
-`requirements-server.txt` also installs the MetaDrive simulator from the upstream git repo, which is required for `OfflineMetadrive-*` tasks such as `easymean` and `mediumsparse`.
+`OfflineMetadrive-*` tasks such as `easymean` and `mediumsparse` require MetaDrive. The provided installer script patches the upstream `metadrive_clean` dependency pins so it can install on Python 3.10/Linux, where the original `panda3d==1.10.8` pin is no longer available.
 
 If your existing env is broken, rebuild it cleanly:
 
@@ -35,6 +36,7 @@ conda env remove -n osrl -y
 conda env create -f environment.yml
 conda activate osrl
 pip install -r requirements-server.txt
+./scripts/install_metadrive_compat.sh
 pip install -e . --no-deps
 ```
 
@@ -58,6 +60,7 @@ conda env remove -n osrl -y
 conda env create -f environment.yml
 conda activate osrl
 pip install -r requirements-server.txt
+./scripts/install_metadrive_compat.sh
 pip install -e . --no-deps
 ```
 

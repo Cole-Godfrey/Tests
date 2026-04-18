@@ -16,4 +16,3 @@ wandb==0.14.2
 easy_runner
 dsrl==0.1.0
 fast-safe-rl==0.1.0
-metadrive-simulator @ git+https://github.com/HenryLHH/metadrive_clean.git@main
