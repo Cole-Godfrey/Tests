@@ -178,6 +178,8 @@ def train(args: CDTTrainConfig):
     # for saving the best
     best_reward = -np.inf
     best_cost = np.inf
+    best_normalized_reward = -np.inf
+    best_normalized_cost = np.inf
     best_idx = 0
 
     for step in trange(args.update_steps, desc="Training"):
@@ -191,7 +193,8 @@ def train(args: CDTTrainConfig):
         # evaluation
         if (step + 1) % args.eval_every == 0 or step == args.update_steps - 1:
             average_reward, average_cost = [], []
-            log_cost, log_reward, log_len = {}, {}, {}
+            average_normalized_reward, average_normalized_cost = [], []
+            log_cost, log_reward, log_len, log_normalized_cost, log_normalized_reward = {}, {}, {}, {}, {}
             for target_return in args.target_returns:
                 reward_return, cost_return = target_return
                 if args.cost_reverse:
@@ -205,29 +208,48 @@ def train(args: CDTTrainConfig):
                         cost_return * args.cost_scale)
                 average_cost.append(cost)
                 average_reward.append(ret)
+                normalized_ret, normalized_cost = env.get_normalized_score(ret, cost)
+                average_normalized_cost.append(normalized_cost)
+                average_normalized_reward.append(normalized_ret)
 
                 name = "c_" + str(int(cost_return)) + "_r_" + str(int(reward_return))
                 log_cost.update({name: cost})
                 log_reward.update({name: ret})
                 log_len.update({name: length})
+                log_normalized_cost.update({name: normalized_cost})
+                log_normalized_reward.update({name: normalized_ret})
 
             logger.store(tab="cost", **log_cost)
             logger.store(tab="ret", **log_reward)
             logger.store(tab="length", **log_len)
+            logger.store(tab="norm_cost", **log_normalized_cost)
+            logger.store(tab="norm_ret", **log_normalized_reward)
+            logger.store(tab="eval",
+                         MeanNormalizedCost=np.mean(average_normalized_cost),
+                         MeanNormalizedReward=np.mean(average_normalized_reward))
 
             # save the current weight
             logger.save_checkpoint()
             # save the best weight
             mean_ret = np.mean(average_reward)
             mean_cost = np.mean(average_cost)
+            mean_normalized_ret = np.mean(average_normalized_reward)
+            mean_normalized_cost = np.mean(average_normalized_cost)
             if mean_cost < best_cost or (mean_cost == best_cost
                                          and mean_ret > best_reward):
                 best_cost = mean_cost
                 best_reward = mean_ret
+                best_normalized_cost = mean_normalized_cost
+                best_normalized_reward = mean_normalized_ret
                 best_idx = step
                 logger.save_checkpoint(suffix="best")
 
-            logger.store(tab="train", best_idx=best_idx)
+            logger.store(tab="train",
+                         best_idx=best_idx,
+                         best_cost=best_cost,
+                         best_reward=best_reward,
+                         best_normalized_cost=best_normalized_cost,
+                         best_normalized_reward=best_normalized_reward)
             logger.write(step, display=False)
 
         else:
