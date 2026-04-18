@@ -27,17 +27,17 @@ pip install -e . --no-deps
 
 ## 2. Optional environment variables
 
-Use offline W&B logging by default:
-
-```bash
-export WANDB_MODE=offline
-```
-
 If you want the DSRL datasets on scratch storage instead of the default `~/.dsrl/datasets`:
 
 ```bash
 export DSRL_DATASET_DIR=/path/to/shared-or-scratch-storage/dsrl
 mkdir -p "$DSRL_DATASET_DIR"
+```
+
+If you ever want to disable online syncing for a specific run, set:
+
+```bash
+export WANDB_MODE=offline
 ```
 
 ## 3. Launch the default 6 runs

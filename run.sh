@@ -20,7 +20,6 @@ LOGDIR="${LOGDIR:-$SCRIPT_DIR/logs}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
 THREADS="${THREADS:-4}"
 EVAL_EPISODES="${EVAL_EPISODES:-10}"
-WANDB_MODE="${WANDB_MODE:-offline}"
 
 if [ "${#GPUS[@]}" -eq 0 ] || [ -z "${GPUS[0]}" ]; then
   echo "No GPUs selected. Set CUDA_DEVICES to a comma-separated list such as 0,1." >&2
@@ -28,7 +27,6 @@ if [ "${#GPUS[@]}" -eq 0 ] || [ -z "${GPUS[0]}" ]; then
 fi
 
 export PYTHONUNBUFFERED=1
-export WANDB_MODE
 export OMP_NUM_THREADS="$THREADS"
 export MKL_NUM_THREADS="$THREADS"
 
@@ -40,7 +38,12 @@ echo "[preflight] seeds=${SEEDS[*]}"
 echo "[preflight] algorithms=${ALGORITHMS[*]}"
 echo "[preflight] gpus=${GPUS[*]}"
 echo "[preflight] logdir=$LOGDIR"
-echo "[preflight] wandb_mode=$WANDB_MODE"
+if [ -n "${WANDB_MODE:-}" ]; then
+  export WANDB_MODE
+  echo "[preflight] wandb_mode=$WANDB_MODE"
+else
+  echo "[preflight] wandb_mode=wandb-default"
+fi
 if [ -n "${DSRL_DATASET_DIR:-}" ]; then
   echo "[preflight] dsrl_dataset_dir=$DSRL_DATASET_DIR"
 else
