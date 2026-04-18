@@ -12,6 +12,7 @@ This repo now includes a Linux/CUDA conda environment file and a `run.sh` launch
 From the repo root on the Linux server:
 
 ```bash
+conda config --set channel_priority strict
 conda env create -f environment.yml
 conda activate osrl
 pip install -e . --no-deps
@@ -22,7 +23,18 @@ If your existing env already fails on `import torch` with
 
 ```bash
 conda activate osrl
-conda install -y "mkl=2024.0" intel-openmp
+conda install -y -c pytorch -c nvidia -c defaults "mkl=2023.1.0" intel-openmp
+pip install -e . --no-deps
+```
+
+If that still fails, the env was likely created with a mixed `conda-forge`/`defaults` BLAS stack. In that case, recreate it cleanly instead of trying to downgrade in place:
+
+```bash
+conda deactivate
+conda env remove -n osrl -y
+conda config --set channel_priority strict
+conda env create -f environment.yml
+conda activate osrl
 pip install -e . --no-deps
 ```
 
