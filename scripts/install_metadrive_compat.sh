@@ -30,5 +30,23 @@ for old, new in replacements.items():
 setup_path.write_text(text)
 PY
 
+echo "[metadrive] installing a compatible dependency set without upgrading OSRL core packages"
+pip install --upgrade --force-reinstall --no-deps \
+  "setuptools<82" \
+  "numpy==1.24.4" \
+  "scipy==1.10.1" \
+  "numba==0.57.1" \
+  "protobuf==3.19.6" \
+  "panda3d==1.10.16" \
+  "panda3d-gltf==1.3.0" \
+  "panda3d-simplepbr==0.13.1" \
+  "pandas==2.1.4" \
+  "pytz==2024.2" \
+  "tzdata==2024.2" \
+  "seaborn==0.13.2" \
+  "pillow==10.4.0" \
+  "opencv-python-headless==4.8.1.78" \
+  "lxml==5.4.0"
+
 echo "[metadrive] installing patched metadrive package"
-pip install "$workdir/metadrive_clean"
+pip install --force-reinstall --no-deps "$workdir/metadrive_clean"

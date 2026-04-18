@@ -26,7 +26,7 @@ This setup intentionally installs PyTorch from the official CUDA 11.7 pip wheels
 
 `swig` is not included in the conda env because it is not required for the current pip-based install path. If a future package install explicitly asks for it on your server image, install it separately with your system package manager or a one-off `conda install -c conda-forge swig`.
 
-`OfflineMetadrive-*` tasks such as `easymean` and `mediumsparse` require MetaDrive. The provided installer script patches the upstream `metadrive_clean` dependency pins so it can install on Python 3.10/Linux, where the original `panda3d==1.10.8` pin is no longer available.
+`OfflineMetadrive-*` tasks such as `easymean` and `mediumsparse` require MetaDrive. The provided installer script patches the upstream `metadrive_clean` dependency pins so it can install on Python 3.10/Linux, where the original `panda3d==1.10.8` pin is no longer available. It also force-reinstalls a compatible `numpy/scipy/numba` stack so MetaDrive does not upgrade OSRL out from under you.
 
 If your existing env is broken, rebuild it cleanly:
 
@@ -45,6 +45,7 @@ Validate the install before training:
 ```bash
 python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available(), torch.cuda.device_count())"
 python -c "import matplotlib, wandb, pkg_resources; print('python deps ok')"
+python -c "import metadrive; print('metadrive ok')"
 ```
 
 If training fails immediately with `ModuleNotFoundError: No module named 'pkg_resources'`, you likely have `setuptools>=82`, which removed `pkg_resources`. Downgrade it and rerun:
