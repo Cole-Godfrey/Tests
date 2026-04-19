@@ -18,6 +18,7 @@ SEEDS=(${SEEDS:-0 1 2})
 ALGORITHMS=(${ALGORITHMS:-cpq coptidice bc-safe})
 CUDA_DEVICES="${CUDA_DEVICES:-0,1}"
 IFS=',' read -r -a GPUS <<< "$CUDA_DEVICES"
+SKIP_RUNS=(${SKIP_RUNS:-OfflineMetadrive-easymean-v0:cpq:0})
 
 PROJECT="${PROJECT:-OSRL-safetygym}"
 LOGDIR="${LOGDIR:-$SCRIPT_DIR/logs}"
@@ -45,6 +46,7 @@ echo "[preflight] algorithms=${ALGORITHMS[*]}"
 echo "[preflight] gpus=${GPUS[*]}"
 echo "[preflight] logdir=$LOGDIR"
 echo "[preflight] update_steps=$UPDATE_STEPS"
+echo "[preflight] skip_runs=${SKIP_RUNS[*]}"
 if [ -n "${WANDB_MODE:-}" ]; then
   export WANDB_MODE
   echo "[preflight] wandb_mode=$WANDB_MODE"
@@ -161,11 +163,33 @@ run_single() {
   echo "[done] gpu=$gpu algo=$algo task=$task seed=$seed"
 }
 
+should_skip_run() {
+  local task="$1"
+  local algo="$2"
+  local seed="$3"
+  local entry=""
+
+  for entry in "${SKIP_RUNS[@]}"; do
+    case "$entry" in
+      "$task:$algo:$seed"|"$algo:$seed")
+        return 0
+        ;;
+    esac
+  done
+
+  return 1
+}
+
 job_index=0
 for task in "${TASKS[@]}"; do
   for seed in "${SEEDS[@]}"; do
     for algo in "${ALGORITHMS[@]}"; do
       gpu="${GPUS[$((job_index % ${#GPUS[@]}))]}"
+      if should_skip_run "$task" "$algo" "$seed"; then
+        echo "[skip] task=$task algo=$algo seed=$seed"
+        job_index=$((job_index + 1))
+        continue
+      fi
       run_single "$gpu" "$algo" "$task" "$seed"
       job_index=$((job_index + 1))
     done
