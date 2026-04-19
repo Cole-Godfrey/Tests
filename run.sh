@@ -131,6 +131,7 @@ run_single() {
   echo "[launch] stdout=$stdout_file"
   echo "[launch] streaming=terminal+log"
 
+  set +e
   CUDA_VISIBLE_DEVICES="$gpu" python -m "$module_path" \
     --task "$task" \
     --device cuda:0 \
@@ -145,6 +146,17 @@ run_single() {
     --logdir "$LOGDIR" \
     "${extra_args[@]}" \
     2>&1 | tee "$stdout_file"
+  cmd_status=${PIPESTATUS[0]}
+  set -e
+
+  if [ "$cmd_status" -eq 139 ] && [[ "$task" == OfflineMetadrive-* ]] && grep -q "wandb: Run summary:" "$stdout_file"; then
+    echo "[warn] metadrive run segfaulted during shutdown after completing training; treating as completed"
+    cmd_status=0
+  fi
+
+  if [ "$cmd_status" -ne 0 ]; then
+    return "$cmd_status"
+  fi
 
   echo "[done] gpu=$gpu algo=$algo task=$task seed=$seed"
 }
