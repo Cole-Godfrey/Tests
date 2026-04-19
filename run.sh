@@ -18,13 +18,18 @@ SEEDS=(${SEEDS:-0 1 2})
 ALGORITHMS=(${ALGORITHMS:-cpq coptidice bc-safe})
 CUDA_DEVICES="${CUDA_DEVICES:-0,1}"
 IFS=',' read -r -a GPUS <<< "$CUDA_DEVICES"
-SKIP_RUNS=(${SKIP_RUNS:-OfflineMetadrive-easymean-v0:cpq:0})
+SKIP_RUNS_RAW="${SKIP_RUNS:-}"
+if [ -n "$SKIP_RUNS_RAW" ]; then
+  read -r -a SKIP_RUNS <<< "$SKIP_RUNS_RAW"
+else
+  SKIP_RUNS=()
+fi
 
 PROJECT="${PROJECT:-OSRL-safetygym}"
 LOGDIR="${LOGDIR:-$SCRIPT_DIR/logs}"
 NUM_WORKERS="${NUM_WORKERS:-4}"
 THREADS="${THREADS:-4}"
-EVAL_EPISODES="${EVAL_EPISODES:-10}"
+EVAL_EPISODES="${EVAL_EPISODES:-20}"
 UPDATE_STEPS="${UPDATE_STEPS:-1000000}"
 
 if [ "${#GPUS[@]}" -eq 0 ] || [ -z "${GPUS[0]}" ]; then
@@ -46,7 +51,13 @@ echo "[preflight] algorithms=${ALGORITHMS[*]}"
 echo "[preflight] gpus=${GPUS[*]}"
 echo "[preflight] logdir=$LOGDIR"
 echo "[preflight] update_steps=$UPDATE_STEPS"
-echo "[preflight] skip_runs=${SKIP_RUNS[*]}"
+echo "[preflight] eval_episodes=$EVAL_EPISODES"
+echo "[preflight] eval_protocol=fisor-paper"
+if [ "${#SKIP_RUNS[@]}" -eq 0 ]; then
+  echo "[preflight] skip_runs=none"
+else
+  echo "[preflight] skip_runs=${SKIP_RUNS[*]}"
+fi
 if [ -n "${WANDB_MODE:-}" ]; then
   export WANDB_MODE
   echo "[preflight] wandb_mode=$WANDB_MODE"
@@ -100,16 +111,29 @@ PY
 
 python scripts/prefetch_dsrl_datasets.py "${TASKS[@]}"
 
+resolve_fisor_cost_limit() {
+  local task="$1"
+  python - "$task" <<'PY'
+import sys
+
+from osrl.common.fisor_protocol import get_fisor_paper_cost_limit
+
+print(get_fisor_paper_cost_limit(sys.argv[1]))
+PY
+}
+
 run_single() {
   local gpu="$1"
   local algo="$2"
   local task="$3"
   local seed="$4"
   local module_path=""
+  local cost_limit=""
   local -a extra_args=()
   local safe_task="${task//[^A-Za-z0-9._-]/_}"
   local stdout_dir="$LOGDIR/stdout/$safe_task"
   local stdout_file="$stdout_dir/${algo}-seed${seed}.log"
+  cost_limit="$(resolve_fisor_cost_limit "$task")"
 
   case "$algo" in
     cpq)
@@ -130,6 +154,7 @@ run_single() {
 
   mkdir -p "$stdout_dir"
   echo "[launch] gpu=$gpu algo=$algo task=$task seed=$seed"
+  echo "[launch] cost_limit=$cost_limit"
   echo "[launch] stdout=$stdout_file"
   echo "[launch] streaming=terminal+log"
 
@@ -142,6 +167,7 @@ run_single() {
     --num_workers "$NUM_WORKERS" \
     --eval_episodes "$EVAL_EPISODES" \
     --update_steps "$UPDATE_STEPS" \
+    --cost_limit "$cost_limit" \
     --project "$PROJECT" \
     --group "$task" \
     --name "${algo}-seed${seed}" \

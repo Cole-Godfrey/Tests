@@ -18,6 +18,7 @@ class EvalConfig:
     costs: List[float] = field(default=[1, 10, 20, 30, 40], is_mutable=True)
     eval_episodes: int = 20
     best: bool = False
+    cost_limit_override: Optional[int] = None
     device: str = "cpu"
     threads: int = 4
 
@@ -36,7 +37,8 @@ def eval(args: EvalConfig):
     else:
         import gymnasium as gym  # noqa
         env = gym.make(cfg["task"])
-    env.set_target_cost(cfg["cost_limit"])
+    eval_cost_limit = cfg["cost_limit"] if args.cost_limit_override is None else args.cost_limit_override
+    env.set_target_cost(eval_cost_limit)
 
     # model & optimizer & scheduler setup
     state_dim = env.observation_space.shape[0]
@@ -60,19 +62,23 @@ def eval(args: EvalConfig):
                         device=args.device)
 
     if cfg["bc_mode"] == "multi-task":
-        for target_cost in args.costs:
+        target_costs = args.costs if args.cost_limit_override is None else [args.cost_limit_override]
+        for target_cost in target_costs:
             env.set_target_cost(target_cost)
             trainer.set_target_cost(target_cost)
             ret, cost, length = trainer.evaluate(args.eval_episodes)
             normalized_ret, normalized_cost = env.get_normalized_score(ret, cost)
             print(
-                f"Eval reward: {ret}, normalized reward: {normalized_ret}; target cost {target_cost}, real cost {cost}, normalized cost: {normalized_cost}"
+                f"Eval reward: {ret}, normalized reward: {normalized_ret}; target cost {target_cost}, "
+                f"real cost {cost}, normalized cost: {normalized_cost}; train cost limit: {cfg['cost_limit']}"
             )
     else:
         ret, cost, length = trainer.evaluate(args.eval_episodes)
         normalized_ret, normalized_cost = env.get_normalized_score(ret, cost)
         print(
-            f"Eval reward: {ret}, normalized reward: {normalized_ret}; cost: {cost}, normalized cost: {normalized_cost}; length: {length}"
+            f"Eval reward: {ret}, normalized reward: {normalized_ret}; cost: {cost}, "
+            f"normalized cost: {normalized_cost}; length: {length}; "
+            f"train cost limit: {cfg['cost_limit']}; eval cost limit: {eval_cost_limit}"
         )
 
 

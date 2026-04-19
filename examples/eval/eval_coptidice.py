@@ -18,6 +18,7 @@ class EvalConfig:
     noise_scale: List[float] = None
     eval_episodes: int = 20
     best: bool = False
+    cost_limit_override: Optional[int] = None
     device: str = "cpu"
     threads: int = 4
 
@@ -42,7 +43,8 @@ def eval(args: EvalConfig):
         reward_scale=cfg["reward_scale"],
     )
     env = OfflineEnvWrapper(env)
-    env.set_target_cost(cfg["cost_limit"])
+    eval_cost_limit = cfg["cost_limit"] if args.cost_limit_override is None else args.cost_limit_override
+    env.set_target_cost(eval_cost_limit)
 
     # setup model
     coptidice_model = COptiDICE(
@@ -75,7 +77,9 @@ def eval(args: EvalConfig):
     ret, cost, length = trainer.evaluate(args.eval_episodes)
     normalized_ret, normalized_cost = env.get_normalized_score(ret, cost)
     print(
-        f"Eval reward: {ret}, normalized reward: {normalized_ret}; cost: {cost}, normalized cost: {normalized_cost}; length: {length}"
+        f"Eval reward: {ret}, normalized reward: {normalized_ret}; cost: {cost}, "
+        f"normalized cost: {normalized_cost}; length: {length}; "
+        f"train cost limit: {cfg['cost_limit']}; eval cost limit: {eval_cost_limit}"
     )
 
 

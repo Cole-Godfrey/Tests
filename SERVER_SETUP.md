@@ -8,6 +8,9 @@ This repo now includes a Linux/CUDA conda environment file and a `run.sh` launch
 - algorithms: `CPQ`, `COptiDICE`, and `BC-Safe`
 - seeds: `0 1 2`
 - `1,000,000` update steps per run
+- `20` evaluation episodes per checkpoint
+- FISOR paper cost limits:
+  `10` for `Safety-Gymnasium`, `5` for `Bullet-Safety-Gym` and `MetaDrive`
 - one training job at a time in the foreground
 
 ## 1. Create the conda environment
@@ -93,6 +96,7 @@ That launches:
 - on `OfflineMetadrive-easymean-v0`, `OfflineMetadrive-mediumsparse-v0`, and `OfflineAntRun-v0`
 - for seeds `0,1,2`
 - with `1,000,000` update steps per run
+- with FISOR paper-style evaluation (`20` episodes, task-family-specific cost limits)
 
 The script first verifies CUDA, then downloads the DSRL dataset once, then runs one training job at a time in the foreground. Output is streamed to the terminal and written to the matching log file with `tee`. If a run fails, the script stops immediately on that run.
 
@@ -116,6 +120,12 @@ Override the default update budget:
 UPDATE_STEPS=200000 ./run.sh
 ```
 
+Skip already-finished runs explicitly:
+
+```bash
+SKIP_RUNS="OfflineMetadrive-easymean-v0:cpq:0" ./run.sh
+```
+
 Run a custom task list:
 
 ```bash
@@ -127,6 +137,15 @@ Run detached:
 ```bash
 nohup ./run.sh > run.out 2>&1 &
 ```
+
+Evaluate finished checkpoints with the FISOR paper protocol:
+
+```bash
+chmod +x fisor_eval.sh
+./fisor_eval.sh
+```
+
+That re-scores completed checkpoints with `20` eval episodes and the published FISOR cost limit for each task family, then prints per-seed and averaged summaries across the available seeds.
 
 ## 5. Output locations
 
