@@ -116,7 +116,7 @@ resolve_fisor_cost_limit() {
   python - "$task" <<'PY'
 import sys
 
-from osrl.common.fisor_protocol import get_fisor_paper_cost_limit
+from fisor_protocol import get_fisor_paper_cost_limit
 
 print(get_fisor_paper_cost_limit(sys.argv[1]))
 PY

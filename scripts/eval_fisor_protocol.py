@@ -13,8 +13,7 @@ from dsrl.offline_env import OfflineEnvWrapper, wrap_env  # noqa
 
 from osrl.algorithms import BC, BCTrainer, CPQ, CPQTrainer, COptiDICE, COptiDICETrainer
 from osrl.common.exp_util import load_config_and_model, seed_all
-from osrl.common.fisor_protocol import (FISOR_PAPER_EVAL_EPISODES,
-                                        get_fisor_paper_cost_limit)
+from fisor_protocol import FISOR_PAPER_EVAL_EPISODES, get_fisor_paper_cost_limit
 
 DEFAULT_TASKS = [
     "OfflineMetadrive-easymean-v0",

@@ -1,6 +1,7 @@
 import copy
 import heapq
 import random
+import sys
 from collections import Counter, defaultdict
 from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Union
 
@@ -9,7 +10,7 @@ import numpy as np
 try:
     import oapackage
 except ImportError:
-    print("OApackage is not installed, can not use CDT.")
+    print("OApackage is not installed, can not use CDT.", file=sys.stderr)
 from scipy.optimize import minimize
 from torch.nn import functional as F  # noqa
 from torch.utils.data import IterableDataset
