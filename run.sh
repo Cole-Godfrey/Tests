@@ -31,6 +31,7 @@ NUM_WORKERS="${NUM_WORKERS:-4}"
 THREADS="${THREADS:-4}"
 EVAL_EPISODES="${EVAL_EPISODES:-20}"
 UPDATE_STEPS="${UPDATE_STEPS:-1000000}"
+SAVE_STDOUT_LOGS="${SAVE_STDOUT_LOGS:-0}"
 
 if [ "${#GPUS[@]}" -eq 0 ] || [ -z "${GPUS[0]}" ]; then
   echo "No GPUs selected. Set CUDA_DEVICES to a comma-separated list such as 0,1." >&2
@@ -42,7 +43,9 @@ export OMP_NUM_THREADS="$THREADS"
 export MKL_NUM_THREADS="$THREADS"
 export PYTHONPATH="$SCRIPT_DIR${PYTHONPATH:+:$PYTHONPATH}"
 
-mkdir -p "$LOGDIR/stdout"
+if [ "$SAVE_STDOUT_LOGS" = "1" ]; then
+  mkdir -p "$LOGDIR/stdout"
+fi
 
 echo "[preflight] repo=$SCRIPT_DIR"
 echo "[preflight] tasks=${TASKS[*]}"
@@ -53,6 +56,7 @@ echo "[preflight] logdir=$LOGDIR"
 echo "[preflight] update_steps=$UPDATE_STEPS"
 echo "[preflight] eval_episodes=$EVAL_EPISODES"
 echo "[preflight] eval_protocol=fisor-paper"
+echo "[preflight] save_stdout_logs=$SAVE_STDOUT_LOGS"
 if [ "${#SKIP_RUNS[@]}" -eq 0 ]; then
   echo "[preflight] skip_runs=none"
 else
@@ -133,6 +137,8 @@ run_single() {
   local safe_task="${task//[^A-Za-z0-9._-]/_}"
   local stdout_dir="$LOGDIR/stdout/$safe_task"
   local stdout_file="$stdout_dir/${algo}-seed${seed}.log"
+  local run_dir="$LOGDIR/$task/${algo}-seed${seed}"
+  local completion_marker="$run_dir/.run_complete"
   cost_limit="$(resolve_fisor_cost_limit "$task")"
 
   case "$algo" in
@@ -152,32 +158,57 @@ run_single() {
       ;;
   esac
 
-  mkdir -p "$stdout_dir"
+  if [ "$SAVE_STDOUT_LOGS" = "1" ]; then
+    mkdir -p "$stdout_dir"
+    echo "[launch] stdout=$stdout_file"
+    echo "[launch] streaming=terminal+log"
+  else
+    echo "[launch] stdout=disabled"
+    echo "[launch] streaming=terminal-only"
+  fi
+  mkdir -p "$run_dir"
+  rm -f "$completion_marker"
   echo "[launch] gpu=$gpu algo=$algo task=$task seed=$seed"
   echo "[launch] cost_limit=$cost_limit"
-  echo "[launch] stdout=$stdout_file"
-  echo "[launch] streaming=terminal+log"
 
   set +e
-  CUDA_VISIBLE_DEVICES="$gpu" python -m "$module_path" \
-    --task "$task" \
-    --device cuda:0 \
-    --seed "$seed" \
-    --threads "$THREADS" \
-    --num_workers "$NUM_WORKERS" \
-    --eval_episodes "$EVAL_EPISODES" \
-    --update_steps "$UPDATE_STEPS" \
-    --cost_limit "$cost_limit" \
-    --project "$PROJECT" \
-    --group "$task" \
-    --name "${algo}-seed${seed}" \
-    --logdir "$LOGDIR" \
-    "${extra_args[@]}" \
-    2>&1 | tee "$stdout_file"
-  cmd_status=${PIPESTATUS[0]}
+  if [ "$SAVE_STDOUT_LOGS" = "1" ]; then
+    CUDA_VISIBLE_DEVICES="$gpu" python -m "$module_path" \
+      --task "$task" \
+      --device cuda:0 \
+      --seed "$seed" \
+      --threads "$THREADS" \
+      --num_workers "$NUM_WORKERS" \
+      --eval_episodes "$EVAL_EPISODES" \
+      --update_steps "$UPDATE_STEPS" \
+      --cost_limit "$cost_limit" \
+      --project "$PROJECT" \
+      --group "$task" \
+      --name "${algo}-seed${seed}" \
+      --logdir "$LOGDIR" \
+      "${extra_args[@]}" \
+      2>&1 | tee "$stdout_file"
+    cmd_status=${PIPESTATUS[0]}
+  else
+    CUDA_VISIBLE_DEVICES="$gpu" python -m "$module_path" \
+      --task "$task" \
+      --device cuda:0 \
+      --seed "$seed" \
+      --threads "$THREADS" \
+      --num_workers "$NUM_WORKERS" \
+      --eval_episodes "$EVAL_EPISODES" \
+      --update_steps "$UPDATE_STEPS" \
+      --cost_limit "$cost_limit" \
+      --project "$PROJECT" \
+      --group "$task" \
+      --name "${algo}-seed${seed}" \
+      --logdir "$LOGDIR" \
+      "${extra_args[@]}"
+    cmd_status=$?
+  fi
   set -e
 
-  if [ "$cmd_status" -eq 139 ] && [[ "$task" == OfflineMetadrive-* ]] && grep -q "wandb: Run summary:" "$stdout_file"; then
+  if [ "$cmd_status" -eq 139 ] && [[ "$task" == OfflineMetadrive-* ]] && [ -f "$completion_marker" ]; then
     echo "[warn] metadrive run segfaulted during shutdown after completing training; treating as completed"
     cmd_status=0
   fi

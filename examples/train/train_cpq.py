@@ -181,6 +181,10 @@ def train(args: CPQTrainConfig):
 
             else:
                 logger.write_without_reset(step)
+
+        completion_marker = os.path.join(args.logdir, ".run_complete")
+        with open(completion_marker, "w", encoding="utf-8") as handle:
+            handle.write(f"update_steps={args.update_steps}\n")
     finally:
         try:
             env.close()
