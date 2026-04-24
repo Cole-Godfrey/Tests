@@ -22,7 +22,20 @@ SKIP_RUNS_RAW="${SKIP_RUNS:-}"
 if [ -n "$SKIP_RUNS_RAW" ]; then
   read -r -a SKIP_RUNS <<< "$SKIP_RUNS_RAW"
 else
-  SKIP_RUNS=()
+  SKIP_RUNS=(
+    "OfflineMetadrive-easymean-v0:cpq:0"
+    "OfflineMetadrive-easymean-v0:coptidice:0"
+    "OfflineMetadrive-easymean-v0:bc-safe:0"
+    "OfflineMetadrive-easymean-v0:cpq:1"
+    "OfflineMetadrive-easymean-v0:coptidice:1"
+    "OfflineMetadrive-easymean-v0:bc-safe:1"
+    "OfflineMetadrive-easymean-v0:cpq:2"
+    "OfflineMetadrive-easymean-v0:coptidice:2"
+    "OfflineMetadrive-easymean-v0:bc-safe:2"
+    "OfflineMetadrive-mediumsparse-v0:cpq:0"
+    "OfflineMetadrive-mediumsparse-v0:coptidice:0"
+    "OfflineMetadrive-mediumsparse-v0:bc-safe:0"
+  )
 fi
 
 PROJECT="${PROJECT:-OSRL-safetygym}"
