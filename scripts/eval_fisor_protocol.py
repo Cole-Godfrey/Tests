@@ -36,6 +36,7 @@ def parse_args():
                         type=int,
                         default=FISOR_PAPER_EVAL_EPISODES)
     parser.add_argument("--best", action="store_true")
+    parser.add_argument("--summary-only", action="store_true")
     parser.add_argument("--output-json", dest="output_json")
     return parser.parse_args()
 
@@ -225,6 +226,7 @@ def main():
     args = parse_args()
     summaries = []
     missing = []
+    requested_seed_count = len(args.seeds)
 
     for task in args.tasks:
         eval_cost_limit = get_fisor_paper_cost_limit(task)
@@ -234,20 +236,22 @@ def main():
                 run_dir = Path(args.logdir) / task / f"{algo}-seed{seed}" / f"{algo}-seed{seed}"
                 if not run_dir.exists():
                     missing.append(str(run_dir))
-                    print(f"[missing] {run_dir}")
+                    if not args.summary_only:
+                        print(f"[missing] {run_dir}")
                     continue
 
                 result = evaluate_run(algo, run_dir, args.eval_episodes, eval_cost_limit,
                                       args.device, args.threads, args.best)
                 result.update({"task": task, "algorithm": algo, "seed": seed})
                 algo_results.append(result)
-                print(
-                    "[eval] "
-                    f"task={task} algo={algo} seed={seed} "
-                    f"reward={result['reward']:.5f} normalized_reward={result['normalized_reward']:.5f} "
-                    f"cost={result['cost']:.5f} normalized_cost={result['normalized_cost']:.5f} "
-                    f"length={result['length']:.2f} eval_cost_limit={result['eval_cost_limit']} "
-                    f"train_cost_limit={result['train_cost_limit']}")
+                if not args.summary_only:
+                    print(
+                        "[eval] "
+                        f"task={task} algo={algo} seed={seed} "
+                        f"reward={result['reward']:.5f} normalized_reward={result['normalized_reward']:.5f} "
+                        f"cost={result['cost']:.5f} normalized_cost={result['normalized_cost']:.5f} "
+                        f"length={result['length']:.2f} eval_cost_limit={result['eval_cost_limit']} "
+                        f"train_cost_limit={result['train_cost_limit']}")
 
             if not algo_results:
                 continue
@@ -272,13 +276,20 @@ def main():
                 "normalized_cost_std": cost_summary["std"],
             }
             summaries.append(summary)
-            print(
-                "[summary] "
-                f"task={task} algo={algo} "
-                f"normalized_reward={summary['normalized_reward_mean']:.5f}±{summary['normalized_reward_std']:.5f} "
-                f"normalized_cost={summary['normalized_cost_mean']:.5f}±{summary['normalized_cost_std']:.5f} "
-                f"reward={summary['reward_mean']:.5f}±{summary['reward_std']:.5f} "
-                f"cost={summary['cost_mean']:.5f}±{summary['cost_std']:.5f}")
+            if args.summary_only:
+                print(
+                    "[summary] "
+                    f"task={task} algo={algo} seeds={len(algo_results)}/{requested_seed_count} "
+                    f"avg_normalized_reward={summary['normalized_reward_mean']:.5f} "
+                    f"avg_normalized_cost={summary['normalized_cost_mean']:.5f}")
+            else:
+                print(
+                    "[summary] "
+                    f"task={task} algo={algo} "
+                    f"normalized_reward={summary['normalized_reward_mean']:.5f}±{summary['normalized_reward_std']:.5f} "
+                    f"normalized_cost={summary['normalized_cost_mean']:.5f}±{summary['normalized_cost_std']:.5f} "
+                    f"reward={summary['reward_mean']:.5f}±{summary['reward_std']:.5f} "
+                    f"cost={summary['cost_mean']:.5f}±{summary['cost_std']:.5f}")
 
     if args.output_json:
         payload = {"summaries": summaries, "missing": missing}
@@ -286,6 +297,9 @@ def main():
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(json.dumps(payload, indent=2))
         print(f"[write] {output_path}")
+
+    if args.summary_only and missing:
+        print(f"[summary-warning] missing_runs={len(missing)}")
 
     if not summaries:
         raise SystemExit("No completed runs were found to evaluate.")

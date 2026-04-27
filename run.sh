@@ -45,6 +45,10 @@ THREADS="${THREADS:-4}"
 EVAL_EPISODES="${EVAL_EPISODES:-20}"
 UPDATE_STEPS="${UPDATE_STEPS:-1000000}"
 SAVE_STDOUT_LOGS="${SAVE_STDOUT_LOGS:-0}"
+FINAL_SUMMARY="${FINAL_SUMMARY:-1}"
+FINAL_SUMMARY_DEVICE="${FINAL_SUMMARY_DEVICE:-cuda:0}"
+FINAL_SUMMARY_GPU="${FINAL_SUMMARY_GPU:-${GPUS[0]}}"
+FINAL_SUMMARY_BEST="${FINAL_SUMMARY_BEST:-0}"
 
 if [ "${#GPUS[@]}" -eq 0 ] || [ -z "${GPUS[0]}" ]; then
   echo "No GPUs selected. Set CUDA_DEVICES to a comma-separated list such as 0,1." >&2
@@ -70,6 +74,7 @@ echo "[preflight] update_steps=$UPDATE_STEPS"
 echo "[preflight] eval_episodes=$EVAL_EPISODES"
 echo "[preflight] eval_protocol=fisor-paper"
 echo "[preflight] save_stdout_logs=$SAVE_STDOUT_LOGS"
+echo "[preflight] final_summary=$FINAL_SUMMARY"
 if [ "${#SKIP_RUNS[@]}" -eq 0 ]; then
   echo "[preflight] skip_runs=none"
 else
@@ -273,3 +278,21 @@ for task in "${TASKS[@]}"; do
 done
 
 echo "[done] all requested runs completed"
+
+if [ "$FINAL_SUMMARY" = "1" ]; then
+  echo "[final-summary] computing average normalized reward/cost across seeds"
+  summary_args=()
+  if [ "$FINAL_SUMMARY_BEST" = "1" ]; then
+    summary_args+=(--best)
+  fi
+  CUDA_VISIBLE_DEVICES="$FINAL_SUMMARY_GPU" python scripts/eval_fisor_protocol.py \
+    --tasks "${TASKS[@]}" \
+    --algorithms "${ALGORITHMS[@]}" \
+    --seeds "${SEEDS[@]}" \
+    --logdir "$LOGDIR" \
+    --device "$FINAL_SUMMARY_DEVICE" \
+    --threads "$THREADS" \
+    --eval-episodes "$EVAL_EPISODES" \
+    --summary-only \
+    "${summary_args[@]}"
+fi
