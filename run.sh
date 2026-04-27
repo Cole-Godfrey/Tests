@@ -238,6 +238,12 @@ should_skip_run() {
   local algo="$2"
   local seed="$3"
   local entry=""
+  local run_dir="$LOGDIR/$task/${algo}-seed${seed}"
+  local completion_marker="$run_dir/.run_complete"
+
+  if [ -f "$completion_marker" ]; then
+    return 0
+  fi
 
   for entry in "${SKIP_RUNS[@]}"; do
     case "$entry" in
