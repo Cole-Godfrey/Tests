@@ -38,12 +38,19 @@ if [ -n "$OUTPUT_JSON" ]; then
   extra_args+=(--output-json "$OUTPUT_JSON")
 fi
 
-python scripts/eval_fisor_protocol.py \
-  --tasks "${TASKS[@]}" \
-  --algorithms "${ALGORITHMS[@]}" \
-  --seeds "${SEEDS[@]}" \
-  --logdir "$LOGDIR" \
-  --device "$DEVICE" \
-  --threads "$THREADS" \
-  --eval-episodes "$EVAL_EPISODES" \
-  "${extra_args[@]}"
+cmd=(
+  python scripts/eval_fisor_protocol.py
+  --tasks "${TASKS[@]}"
+  --algorithms "${ALGORITHMS[@]}"
+  --seeds "${SEEDS[@]}"
+  --logdir "$LOGDIR"
+  --device "$DEVICE"
+  --threads "$THREADS"
+  --eval-episodes "$EVAL_EPISODES"
+)
+
+if [ "${#extra_args[@]}" -gt 0 ]; then
+  cmd+=("${extra_args[@]}")
+fi
+
+"${cmd[@]}"

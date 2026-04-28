@@ -34,9 +34,16 @@ if [ -n "$OUTPUT_JSON" ]; then
   extra_args+=(--output-json "$OUTPUT_JSON")
 fi
 
-python scripts/fetch_wandb_final_metrics.py \
-  --project "$PROJECT" \
-  --tasks "${TASKS[@]}" \
-  --algorithms "${ALGORITHMS[@]}" \
-  --seeds "${SEEDS[@]}" \
-  "${extra_args[@]}"
+cmd=(
+  python scripts/fetch_wandb_final_metrics.py
+  --project "$PROJECT"
+  --tasks "${TASKS[@]}"
+  --algorithms "${ALGORITHMS[@]}"
+  --seeds "${SEEDS[@]}"
+)
+
+if [ "${#extra_args[@]}" -gt 0 ]; then
+  cmd+=("${extra_args[@]}")
+fi
+
+"${cmd[@]}"
