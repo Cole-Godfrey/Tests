@@ -254,6 +254,12 @@ def main():
                         f"train_cost_limit={result['train_cost_limit']}")
 
             if not algo_results:
+                if args.summary_only:
+                    print(
+                        "[summary] "
+                        f"task={task} algo={algo} seeds=0/{requested_seed_count} "
+                        "avg_reward=missing avg_cost=missing "
+                        "avg_normalized_reward=missing avg_normalized_cost=missing")
                 continue
 
             reward_summary = summarize([x["normalized_reward"] for x in algo_results])
@@ -280,6 +286,8 @@ def main():
                 print(
                     "[summary] "
                     f"task={task} algo={algo} seeds={len(algo_results)}/{requested_seed_count} "
+                    f"avg_reward={summary['reward_mean']:.5f} "
+                    f"avg_cost={summary['cost_mean']:.5f} "
                     f"avg_normalized_reward={summary['normalized_reward_mean']:.5f} "
                     f"avg_normalized_cost={summary['normalized_cost_mean']:.5f}")
             else:
