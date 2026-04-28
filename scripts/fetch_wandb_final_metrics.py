@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument("--tasks", nargs="+", default=DEFAULT_TASKS)
     parser.add_argument("--algorithms", nargs="+", default=DEFAULT_ALGOS)
     parser.add_argument("--seeds", nargs="+", type=int, default=DEFAULT_SEEDS)
+    parser.add_argument("--include-unfinished", action="store_true")
     parser.add_argument("--output-json", dest="output_json")
     return parser.parse_args()
 
@@ -108,17 +109,22 @@ def extract_metrics(run) -> Tuple[Optional[Dict[str, float]], str]:
 
 def candidate_sort_key(run):
     state = getattr(run, "state", "") or ""
-    finished = 0 if state == "finished" else 1
+    finished = 1 if state == "finished" else 0
     updated_at = getattr(run, "updated_at", "") or ""
     created_at = getattr(run, "created_at", "") or ""
     return (finished, updated_at, created_at)
 
 
-def choose_best_run(runs: Iterable, task: str, algo: str, seed: int):
+def choose_best_run(runs: Iterable, task: str, algo: str, seed: int, include_unfinished: bool):
     target_name = f"{algo}-seed{seed}"
     candidates = [run for run in runs if getattr(run, "group", None) == task and getattr(run, "name", None) == target_name]
     if not candidates:
-        return None
+        return None, "run-not-found"
+    finished_candidates = [run for run in candidates if getattr(run, "state", None) == "finished"]
+    if finished_candidates:
+        candidates = finished_candidates
+    elif not include_unfinished:
+        return None, "only-unfinished-runs-found"
     candidates.sort(key=candidate_sort_key, reverse=True)
     metric_candidates = []
     for run in candidates:
@@ -127,8 +133,8 @@ def choose_best_run(runs: Iterable, task: str, algo: str, seed: int):
             metric_candidates.append((run, metrics, source))
     if metric_candidates:
         metric_candidates.sort(key=lambda item: candidate_sort_key(item[0]), reverse=True)
-        return metric_candidates[0]
-    return candidates[0], None, "missing"
+        return metric_candidates[0], None
+    return (candidates[0], None, "missing"), None
 
 
 def summarize(values: List[float]) -> Dict[str, float]:
@@ -152,10 +158,18 @@ def main():
         for algo in args.algorithms:
             algo_results = []
             for seed in args.seeds:
-                chosen = choose_best_run(all_runs, task, algo, seed)
+                chosen, missing_reason = choose_best_run(all_runs, task, algo, seed,
+                                                         args.include_unfinished)
                 if chosen is None:
-                    missing.append({"task": task, "algorithm": algo, "seed": seed, "reason": "run not found"})
-                    print(f"[missing] task={task} algo={algo} seed={seed} reason=run-not-found")
+                    missing.append({
+                        "task": task,
+                        "algorithm": algo,
+                        "seed": seed,
+                        "reason": missing_reason,
+                    })
+                    print(
+                        f"[missing] task={task} algo={algo} seed={seed} "
+                        f"reason={missing_reason}")
                     continue
 
                 run, metrics, source = chosen
