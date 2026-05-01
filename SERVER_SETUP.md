@@ -2,11 +2,22 @@
 
 This repo now includes a Linux/CUDA conda environment file and a `run.sh` launcher that defaults to:
 
-- `OfflineMetadrive-easymean-v0`
-- `OfflineMetadrive-mediumsparse-v0`
-- `OfflineAntRun-v0`
-- algorithms: `CPQ`, `COptiDICE`, and `BC-Safe`
-- seeds: `0 1 2`
+- `OfflineCarCircle-v0`
+- `OfflineDroneRun-v0`
+- `OfflineDroneCircle-v0`
+- `OfflineCarRun-v0`
+- `OfflineAntCircle-v0`
+- `OfflineBallCircle-v0`
+- `OfflineBallRun-v0`
+- `OfflineMetadrive-easysparse-v0`
+- `OfflineMetadrive-easydense-v0`
+- `OfflineMetadrive-mediummean-v0`
+- `OfflineMetadrive-mediumdense-v0`
+- `OfflineMetadrive-hardsparse-v0`
+- `OfflineMetadrive-hardmean-v0`
+- `OfflineMetadrive-harddense-v0`
+- algorithm: `BC-Safe`
+- seed: `0`
 - `1,000,000` update steps per run
 - `20` evaluation episodes per checkpoint
 - FISOR paper cost limits:
@@ -91,7 +102,7 @@ If you ever want to disable online syncing for a specific run, set:
 export WANDB_MODE=offline
 ```
 
-## 3. Launch the default 27 runs
+## 3. Launch the default 14 runs
 
 ```bash
 chmod +x run.sh
@@ -100,9 +111,9 @@ chmod +x run.sh
 
 That launches:
 
-- `CPQ`, `COptiDICE`, and `BC-Safe`
-- on `OfflineMetadrive-easymean-v0`, `OfflineMetadrive-mediumsparse-v0`, and `OfflineAntRun-v0`
-- for seeds `0,1,2`
+- `BC-Safe`
+- on all configured `Bullet-Safety-Gym` and `MetaDrive` tasks except `OfflineAntRun-v0`, `OfflineMetadrive-easymean-v0`, and `OfflineMetadrive-mediumsparse-v0`
+- for seed `0`
 - with `1,000,000` update steps per run
 - with FISOR paper-style evaluation (`20` episodes, task-family-specific cost limits)
 
@@ -137,13 +148,13 @@ UPDATE_STEPS=200000 ./run.sh
 Skip already-finished runs explicitly:
 
 ```bash
-SKIP_RUNS="OfflineMetadrive-easymean-v0:cpq:0" ./run.sh
+SKIP_RUNS="OfflineCarCircle-v0:bc-safe:0" ./run.sh
 ```
 
 Run a custom task list:
 
 ```bash
-./run.sh OfflineMetadrive-easymean-v0 OfflineAntRun-v0
+./run.sh OfflineCarCircle-v0 OfflineMetadrive-harddense-v0
 ```
 
 Run detached:

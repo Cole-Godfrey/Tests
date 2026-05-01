@@ -12,12 +12,23 @@ import wandb
 
 
 DEFAULT_TASKS = [
-    "OfflineMetadrive-easymean-v0",
-    "OfflineMetadrive-mediumsparse-v0",
-    "OfflineAntRun-v0",
+    "OfflineCarCircle-v0",
+    "OfflineDroneRun-v0",
+    "OfflineDroneCircle-v0",
+    "OfflineCarRun-v0",
+    "OfflineAntCircle-v0",
+    "OfflineBallCircle-v0",
+    "OfflineBallRun-v0",
+    "OfflineMetadrive-easysparse-v0",
+    "OfflineMetadrive-easydense-v0",
+    "OfflineMetadrive-mediummean-v0",
+    "OfflineMetadrive-mediumdense-v0",
+    "OfflineMetadrive-hardsparse-v0",
+    "OfflineMetadrive-hardmean-v0",
+    "OfflineMetadrive-harddense-v0",
 ]
-DEFAULT_ALGOS = ["cpq", "coptidice", "bc-safe"]
-DEFAULT_SEEDS = [0, 1, 2]
+DEFAULT_ALGOS = ["bc-safe"]
+DEFAULT_SEEDS = [0]
 
 SUMMARY_KEYS = (
     "eval/NormalizedReward",

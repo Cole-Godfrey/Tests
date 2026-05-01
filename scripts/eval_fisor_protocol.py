@@ -16,9 +16,20 @@ from osrl.common.exp_util import load_config_and_model, seed_all
 from fisor_protocol import FISOR_PAPER_EVAL_EPISODES, get_fisor_paper_cost_limit
 
 DEFAULT_TASKS = [
-    "OfflineMetadrive-easymean-v0",
-    "OfflineMetadrive-mediumsparse-v0",
-    "OfflineAntRun-v0",
+    "OfflineCarCircle-v0",
+    "OfflineDroneRun-v0",
+    "OfflineDroneCircle-v0",
+    "OfflineCarRun-v0",
+    "OfflineAntCircle-v0",
+    "OfflineBallCircle-v0",
+    "OfflineBallRun-v0",
+    "OfflineMetadrive-easysparse-v0",
+    "OfflineMetadrive-easydense-v0",
+    "OfflineMetadrive-mediummean-v0",
+    "OfflineMetadrive-mediumdense-v0",
+    "OfflineMetadrive-hardsparse-v0",
+    "OfflineMetadrive-hardmean-v0",
+    "OfflineMetadrive-harddense-v0",
 ]
 
 
@@ -26,8 +37,8 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Evaluate OSRL checkpoints with the published FISOR paper protocol.")
     parser.add_argument("--tasks", nargs="+", default=DEFAULT_TASKS)
-    parser.add_argument("--algorithms", nargs="+", default=["cpq", "coptidice", "bc-safe"])
-    parser.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
+    parser.add_argument("--algorithms", nargs="+", default=["bc-safe"])
+    parser.add_argument("--seeds", nargs="+", type=int, default=[0])
     parser.add_argument("--logdir", default="logs")
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--threads", type=int, default=4)
